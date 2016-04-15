@@ -1,15 +1,11 @@
 ﻿#include <iostream>
-#include "cv.h"
-#include "highgui.h"
-#include "cvaux.h"
-#include <opencv2\calib3d\calib3d_c.h>
-#include<opencv2\videoio.hpp>
-#include <iostream>
 #include <vector>
-#include<cxcore.h>
 
+#include "cv.hpp"
 
 using namespace std;
+using namespace cv;
+
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -59,17 +55,21 @@ void SCalibration(CvCapture *camera1, CvCapture *camera2)
 			result1 = cvFindChessboardCorners(frame1,
 				board_size,
 				&found_points_coords1[0],
-				NULL,
+				nullptr,
 				CV_CALIB_CB_NORMALIZE_IMAGE | CV_CALIB_CB_FILTER_QUADS);
+
 			result2 = cvFindChessboardCorners(frame2,
 				board_size,
 				&found_points_coords2[0],
-				NULL,
+				nullptr,
 				CV_CALIB_CB_NORMALIZE_IMAGE | CV_CALIB_CB_FILTER_QUADS);
+
+			gr_frame1 = cvCreateImage(cvGetSize(frame1), IPL_DEPTH_8U, 1);
+			gr_frame2 = cvCreateImage(cvGetSize(frame2), IPL_DEPTH_8U, 1);
 
 			//Конвертация изображений в градации серого
 			cvConvertImage(frame1, gr_frame1, CV_8S);
-			cvConvertImage(frame1, gr_frame1, CV_8S);
+			cvConvertImage(frame2, gr_frame2, CV_8S);
 
 			//Функция для поиска углов на доске(с точностью субпикселя), со встроенной нормализацией и поиском черных квадратов для увеличения точности калибровки
 			cvFindCornerSubPix(gr_frame1,
@@ -99,8 +99,8 @@ void SCalibration(CvCapture *camera1, CvCapture *camera2)
 				result2);
 
 			////Отображение изображения
-			cvShowImage("camera1", frame1);
-			cvShowImage("camera2", frame2);
+			cvShowImage("capture1", frame1);
+			cvShowImage("capture2", frame2);
 
 
 			//Добавление хорошего(у котрого задетектированы все углы) представления доски в коллекцию
@@ -136,8 +136,8 @@ void SCalibration(CvCapture *camera1, CvCapture *camera2)
 
 		//Съемка следущей фотографии
 		/*stereoGrabberGrabFrames();*/
-		cvShowImage("camera 1", frame1);
-		cvShowImage("camera 1", frame2);
+		//cvShowImage("camera 1", frame1);
+		//cvShowImage("camera 1", frame2);
 
 		//Ожидание нажатия клавишы для завершения
 		if (cvWaitKey(15) == 27) break;
@@ -161,26 +161,30 @@ void SCalibration(CvCapture *camera1, CvCapture *camera2)
 int main(int argc, char **argv)
 {
 	CvCapture *camera1, *camera2;
-	// получаем любую подключённую камеру
 	
-	camera1 = cvCreateCameraCapture(0); // или Ваш cvCaptureFromCAM( 0 );
-	//camera2 = cvCreateCameraCapture(0); // или Ваш cvCaptureFromCAM( 0 );
+	// получаем любую подключённую камеру
+	camera1 = cvCreateCameraCapture(-1); // или Ваш cvCaptureFromCAM( 0 );
+	camera2 = cvCreateCameraCapture(-1); // или Ваш cvCaptureFromCAM( 0 );
+	if (! (camera1&&camera2))
+	{
+		cout << "No camera detected" << endl;
+	}
+	// !!!
+	SCalibration(camera1, camera1);
 
-	//SCalibration(camera1, camera2);
+	
+	//IplImage* frame2;
 
-	IplImage* frame1 = 0;
-	IplImage* frame2 = 0;
-
-	cvNamedWindow("capture1", CV_WINDOW_AUTOSIZE);
+	//cvNamedWindow("capture1", CV_WINDOW_AUTOSIZE);
 	//cvNamedWindow("capture2", CV_WINDOW_AUTOSIZE);
 	while (true)
 	{
 	/*	 получаем кадр*/
-		frame1 = cvQueryFrame(camera1);
-		//frame2 = cvQueryFrame(camera2);
+		IplImage* frame1 = cvQueryFrame(camera1);
+		IplImage* frame2 = cvQueryFrame(camera2);
 		/* показываем*/
 		cvShowImage("capture1", frame1);
-		//cvShowImage("capture2", frame2);
+		cvShowImage("capture2", frame2);
 		char c = cvWaitKey(33);
 		if (c == 27) { // нажата ESC
 			break;
@@ -189,8 +193,9 @@ int main(int argc, char **argv)
 
 	 //освобождаем ресурсы
 	cvReleaseCapture(&camera1);
-	//cvReleaseCapture(&camera2);
-
+	
+	cvReleaseCapture(&camera2);
+	//cvDestroyWindow("capture1");
 
 	return 0;
 }

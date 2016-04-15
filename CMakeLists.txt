@@ -55,7 +55,7 @@ message(STATUS "OpenCV_LIBS=${OpenCV_LIBS}")
 message(STATUS "_OpenCV_LIB_PATH=${_OpenCV_LIB_PATH}")
 
 include_directories(${OpenCV_INCLUDE_DIRS})
-link_libraries(${OpenCV_LIBS})
+#link_libraries(${OpenCV_LIBS})
 
 message(STATUS "OpenCV library status:")
 message(STATUS "    version: ${OpenCV_VERSION}")
@@ -65,4 +65,4 @@ message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 add_executable(Capture_Video Capture_Video.cpp)
 
 message (STATUS "List of files for linker input: ${OPENCV_LIBS_WITH_PATHS}")
-target_link_libraries(Capture_Video ${OPENCV_LIBS})
+target_link_libraries(Capture_Video ${OpenCV_LIBS})
